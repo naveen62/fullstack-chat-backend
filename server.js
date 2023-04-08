@@ -18,6 +18,21 @@ const user = new User();
 
 io.on('connection',(socket) => {
 
+    socket.on('joinGroup',(joinGroup,callback) => {
+        if(group.groupExists(joinGroup)) {
+            socket.join(joinGroup);
+            io.emit('userJoinedGroup',joinGroup);
+        }
+    })
+    socket.on('leaveGroup',(joinGroup,callback) => {
+        if(group.groupExists(joinGroup)) {
+            socket.leave(joinGroup);
+            io.emit('userLeftGroup',joinGroup);
+            callback();
+        }
+    })
+
+
     socket.on('join',(username,callback) => {
         // const groupList = group.groupList();
         // groupList.forEach((group) => {
@@ -56,7 +71,6 @@ io.on('connection',(socket) => {
     })
 
     socket.on('newMessage',(message,callback) => {
-        console.log(message);
         if(group.groupExists(message.group)) {
             return io.emit('newMessage', generateMessage(message.username,message.message,message.group))
         }
