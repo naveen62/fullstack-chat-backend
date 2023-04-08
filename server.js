@@ -19,11 +19,15 @@ const user = new User();
 io.on('connection',(socket) => {
 
     socket.on('join',(username,callback) => {
-        const groupList = group.groupList();
-        groupList.forEach((group) => {
-            socket.join(group);
-        })
-        user.addUser(username,socket.id);
+        // const groupList = group.groupList();
+        // groupList.forEach((group) => {
+        //     socket.join(group);
+        // })
+        if(!user.userExists(username)) {
+            user.addUser(username,socket.id);
+        } else {
+            user.replaceId(username,socket.id)
+        }
         callback('User joined to groups')
     })
 
@@ -35,7 +39,6 @@ io.on('connection',(socket) => {
         if(!group.groupExists(newGroup)) {
             group.addGroup(newGroup)
             const connectedIds = user.getUsers().map(user => user.id);
-            console.log(connectedIds);
             io.to(connectedIds).emit('groupCreated',newGroup);
             // socket.emit('groupCreated',newGroup);
         } else {
@@ -45,7 +48,7 @@ io.on('connection',(socket) => {
 
     socket.on('joinCreatedGroup',(createdGroup,callback) => {
         if(group.groupExists(createdGroup)) {
-            socket.join(createdGroup);
+            // socket.join(createdGroup);
             callback(false)
         } else {
             callback(true)
@@ -55,7 +58,7 @@ io.on('connection',(socket) => {
     socket.on('newMessage',(message,callback) => {
         console.log(message);
         if(group.groupExists(message.group)) {
-            return io.to(message.group).emit('newMessage', generateMessage(message.username,message.message,message.group))
+            return io.emit('newMessage', generateMessage(message.username,message.message,message.group))
         }
     })
 })
