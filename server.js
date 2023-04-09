@@ -21,13 +21,21 @@ io.on('connection',(socket) => {
     socket.on('joinGroup',(joinGroup,callback) => {
         if(group.groupExists(joinGroup)) {
             socket.join(joinGroup);
-            io.emit('userJoinedGroup',joinGroup);
+            const onlineCount = group.joinUser(joinGroup,socket.id);
+            io.emit('userJoinedGroup',{
+                group:joinGroup,
+                online:onlineCount
+            });
         }
     })
     socket.on('leaveGroup',(joinGroup,callback) => {
         if(group.groupExists(joinGroup)) {
             socket.leave(joinGroup);
-            io.emit('userLeftGroup',joinGroup);
+            const onlineCount = group.leaveUser(joinGroup,socket.id);
+            io.emit('userLeftGroup',{
+                group:joinGroup,
+                online:onlineCount
+            });
             callback();
         }
     })
@@ -52,7 +60,10 @@ io.on('connection',(socket) => {
     })
 
     socket.on('getGroupsList',(data,callback) => {
-        socket.emit('sendGroupList',group.groupList());
+        socket.emit('sendGroupList',{
+            groups:group.groupList(),
+            joinedCounts:group.getJoinedCount()
+        });
     })
 
     socket.on('createGroup',(newGroup,callback) => {
