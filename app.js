@@ -16,18 +16,34 @@ const io = new Server(server,{
 const group = new Group();
 const user = new User();
 
+process.on('uncaughtException', (err) => {
+    console.trace(err)
+})
+
+process.on('unhandledRejection', (err) => {
+    console.trace(err)
+})
+
 io.on('connection',(socket) => {
 
     socket.on('joinGroup',(joinGroup,callback) => {
         if(group.groupExists(joinGroup)) {
             socket.join(joinGroup);
-            io.emit('userJoinedGroup',joinGroup);
+            const onlineCount = group.joinUser(joinGroup,socket.id);
+            io.emit('userJoinedGroup',{
+                group:joinGroup,
+                online:onlineCount
+            });
         }
     })
     socket.on('leaveGroup',(joinGroup,callback) => {
         if(group.groupExists(joinGroup)) {
             socket.leave(joinGroup);
-            io.emit('userLeftGroup',joinGroup);
+            const onlineCount = group.leaveUser(joinGroup,socket.id);
+            io.emit('userLeftGroup',{
+                group:joinGroup,
+                online:onlineCount
+            });
             callback();
         }
     })
@@ -52,7 +68,10 @@ io.on('connection',(socket) => {
     })
 
     socket.on('getGroupsList',(data,callback) => {
-        socket.emit('sendGroupList',group.groupList());
+        socket.emit('sendGroupList',{
+            groups:group.groupList(),
+            joinedCounts:group.getJoinedCount()
+        });
     })
 
     socket.on('createGroup',(newGroup,callback) => {
@@ -78,6 +97,18 @@ io.on('connection',(socket) => {
     socket.on('newMessage',(message,callback) => {
         if(group.groupExists(message.group)) {
             return io.emit('newMessage', generateMessage(message.username,message.message,message.group))
+        }
+    })
+
+    socket.on('disconnect', () => {
+        const disconnectedUser = group.disconnectedUser(socket.id);
+        user.removeUser(socket.id);
+        if((disconnectedUser.count || disconnectedUser.count === 0) && disconnectedUser.group) {
+            socket.leave(disconnectedUser.group);
+            io.emit('userLeftGroup',{
+                group:disconnectedUser.group,
+                online:disconnectedUser.count
+            });
         }
     })
 })
