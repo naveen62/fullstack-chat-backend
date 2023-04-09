@@ -31,7 +31,12 @@ io.on('connection',(socket) => {
             callback();
         }
     })
-
+    socket.on('checkUsername',(username,callback) => {
+        if(user.userExists(username)) {
+            return callback(true)
+        }
+        callback(false,username);
+    })  
 
     socket.on('join',(username,callback) => {
         // const groupList = group.groupList();
