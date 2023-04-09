@@ -38,7 +38,15 @@ class Group {
     }
     disconnectedUser(id) {
         let users = this.joinTrack.filter((item) => item.userId === id);
-        
+        this.joinTrack = this.joinTrack.filter((item) => item.userId !== id)
+        if(users[0]) {
+            const count = this.leaveUser(users[0].groupName,id);
+            return {
+                count,
+                group:users[0].groupName
+            }
+        } 
+        return {};
     }
 }
 module.exports = Group; 

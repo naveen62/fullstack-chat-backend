@@ -91,6 +91,18 @@ io.on('connection',(socket) => {
             return io.emit('newMessage', generateMessage(message.username,message.message,message.group))
         }
     })
+
+    socket.on('disconnect', () => {
+        const disconnectedUser = group.disconnectedUser(socket.id);
+        user.removeUser(socket.id);
+        if((disconnectedUser.count || disconnectedUser.count === 0) && disconnectedUser.group) {
+            socket.leave(disconnectedUser.group);
+            io.emit('userLeftGroup',{
+                group:disconnectedUser.group,
+                online:disconnectedUser.count
+            });
+        }
+    })
 })
 
 server.listen(5000,() => {
