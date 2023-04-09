@@ -16,6 +16,14 @@ const io = new Server(server,{
 const group = new Group();
 const user = new User();
 
+process.on('uncaughtException', (err) => {
+    console.trace(err)
+})
+
+process.on('unhandledRejection', (err) => {
+    console.trace(err)
+})
+
 io.on('connection',(socket) => {
 
     socket.on('joinGroup',(joinGroup,callback) => {
